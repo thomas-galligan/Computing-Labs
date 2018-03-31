@@ -1,0 +1,219 @@
+%Report for CO25 Computing Project: Laplace's Equation
+%Thomas Galligan
+%Brasenose College
+%University of Oxford
+%Trinity Term 2017
+
+%%TO DO
+%%cite griffiths under EM reference
+%%add script citation
+%%cite something about divergent and convergent regimes of the over-relaxation parameter
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{amsmath, amsfonts, esint,commath,mathrsfs, graphicx,listings, matlab-prettifier}
+
+\setlength{\voffset}{-30mm}
+\setlength{\hoffset}{-10mm}
+\setlength{\oddsidemargin}{0mm}
+\setlength{\evensidemargin}{0mm}
+\DeclareMathOperator{\sinc}{sinc}
+\setlength{\marginparwidth}{0mm}
+\addtolength{\textwidth}{50mm}
+\addtolength{\textheight}{55mm}
+\usepackage{amsbsy}
+
+
+\begin{document}
+
+\begin{center}
+\Large{\textbf{CO25: Laplace's Equation}}\\ 
+\vspace{1em}
+\large{T.P. Galligan}\\
+\large{Brasenose College}\\
+\large{Trinity Term 2017}
+\end{center}
+\section{Abstract}
+We use the method of successive over-relaxation to approximate a solution to a two-dimensional Laplace's equation with Dirichlet boundary conditions. The solution is compared to the analytical result, and the convergence process is examined for different regimes of the over-relaxation parameter $\alpha$. 
+\section{Introduction}
+Laplace's equation is a linear second order partial differential equation. It takes the form 
+\begin{equation}
+\frac{\partial^2\phi}{\partial x^2} + \frac{\partial^2\phi}{\partial y^2} = 0
+\end{equation}
+
+Where $\phi = \phi(x,y) : \mathbb{R}^2 \rightarrow \mathbb{R}$.\
+
+Laplace's equation occurs frequently in mathematics and physics, for example in complex analysis \cite{complex}, two-dimensional fluid mechanics \cite{fluids}, and electrostatics problems \cite{EM}. We use a method of over-relaxation to approximate the solution to eq. (1) with the (Dirichlet) boundary conditions.
+
+\begin{align}
+\phi(0,y) &= 0 \hspace{3mm} \forall y \in [0,1]\\
+\phi(x,0) &= 1 \hspace{3mm} \forall x \in [0,1]\\
+\phi(1,y) &= \sin(1) \sinh(y) \hspace{3mm}\forall y \in [0,1]\\
+\phi(x,1) &= \sin(x) \sinh(1) \hspace{3mm}\forall x \in [0,1]
+\end{align}
+\section{Theory}
+Let the domain be rectangular and described by $x \in [x_0, x_1]$ and $y \in [y_0, y_1]$. We discretise the solution into a $p+1$ by $q+1$ rectangular grid given by $x_i = x_0 + i\delta x$, $y_j = y_0 + j\delta y$ where $i \in [0,p] \subset \mathbb{Z}$ and similarly $j\in [0,q] \subset \mathbb{Z}$. The mesh spacing is then $\delta x = (x_1-x_0)/p$, $\delta y = (y_1-y_0)/q$. We let $\phi_{i,j} \equiv \phi(x_i,y_j)$ be the exact solution at mesh point $(i,j)$, and $\psi_{i,j} \approx \phi_{i,j}$ be the numerical solution at that point.
+\newline We Taylor Expand $\psi$ about some point $(i,j)$:
+\begin{align}
+\psi_{i+1,j} &= \psi_{i,j} + \delta x \frac{\partial \psi}{\partial x}\bigg\rvert_{i,j} + \frac{\delta x^2}{2}\frac{\partial^2\psi}{\partial x^2}\bigg\rvert_{i,j} + \mathcal{O}(\delta x^3)\\
+\psi_{i-1,j} &= \psi_{i,j} - \delta x \frac{\partial \psi}{\partial x}\bigg\rvert_{i,j} + \frac{\delta x^2}{2}\frac{\partial^2\psi}{\partial x^2}\bigg\rvert_{i,j} + \mathcal{O}(\delta x^3)\\
+\psi_{i,j+1} &= \psi_{i,j} + \delta y \frac{\partial \psi}{\partial y}\bigg\rvert_{i,j} + \frac{\delta y^2}{2}\frac{\partial^2\psi}{\partial y^2}\bigg\rvert_{i,j} + \mathcal{O}(\delta y^3)\\
+\psi_{i,j-1} &= \psi_{i,j} - \delta y \frac{\partial \psi}{\partial y}\bigg\rvert_{i,j} + \frac{\delta y^2}{2}\frac{\partial^2\psi}{\partial y^2}\bigg\rvert_{i,j} + \mathcal{O}(\delta y^3)
+\end{align}
+
+Then we can approximate eq. (1) to first order using the four adjacent mesh points. This gives us the approximation
+\begin{equation} 
+\frac{\psi_{i+1,j} - 2\psi_{i,j} + \psi_{i-1,j}}{\delta x^2} + \frac{\psi_{i+1,j} - 2\psi_{i,j} + \psi_{i-1,j}}{\delta y^2} = 0
+\end{equation}
+
+We can then solve this equation using a variety of numerical approaches. 
+
+\section{Methods}
+We use an iterative method described in \cite{script}. We wish to solve (1) for the boundary conditions eqs. (2) - (5) for a uniform $7 \times 7$ grid. In this case, $p = q = 7$ and we have the iteration procedure
+\begin{equation}
+\psi_{i,j}^{m+1} =  \psi_{i,j}^m + \frac{\alpha R_{i,j}^m}{4}
+\end{equation}
+Where we define the residual
+
+\begin{equation}
+R_{i,j}^m := \psi_{i,j+1}^m + \psi_{i-1,j}^m + \psi_{i-1,j}^m + \psi_{i+1,j}^m - 4\psi_{i,j}^m.
+\end{equation}
+and the over-relaxation parameter
+\begin{equation}
+\alpha := \frac{2}{1+\sin\frac{\pi}{p}}
+\end{equation}
+We set a maximum iteration number to stop the process in the case of divergent iterations, and we seek to minimise the residual matrix $R_{i,j}$. We break the iterations when the residual is less than $0.001$. Given the function is no more than on the order of $1$ in the domain, this is a reasonable condition (as will be shown upon comparison with the analytic solution). Full details of the method are given in the appendix. 
+\section{Results}
+We examined the numerical solution and the convergence process for a variety of regimes of $\alpha$. 
+\subsection{$\alpha = 1.1$}
+Theory (see, for example, \cite{theory}) suggests that we should see %%%add detail here?
+convergent behaviour. This is indeed the case, and the numerical and analytical solutions are virtually indistinguishable. By analysing the sample values, we see a monotonic convergence towards the analytical solution (see Fig.2).
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/comp11.png}
+  \caption{Comparison of numerical and analytical solutions for $\alpha = 1.1$.}
+  \label{fig:graph1}
+\end{figure}
+\begin{figure}[h!]
+  \includegraphics[width=10cm]{/Users/Tom/Desktop/conv11.png}
+  \caption{Convergence to the analytical solution for $\alpha = 1.1$}
+  \label{fig:graph1}
+\end{figure}
+\pagebreak
+\subsection{$\alpha = 1.25$}
+The analytical and numerical solutions were again very similar, as seen by the convergence of the sample points:
+\begin{figure}[h!]
+  \includegraphics[width=10cm]{/Users/Tom/Desktop/conv125.png}
+  \caption{Convergence of sample values for $\alpha = 1.25$}
+  \label{fig:graph1}
+  \end{figure}
+  \pagebreak
+\subsection{$\alpha = 1.45$}
+\begin{figure}[h!]
+  \includegraphics[width=10cm]{/Users/Tom/Desktop/conv145.png}
+  \caption{Results from a slit of width 10 at the centre}
+  \label{fig:graph1}
+  \end{figure}
+\noindent At $\alpha - 1.45$, the system still converges on the ananlytical solution, but does so in an oscillatory manner (seen by the peak at $m  \approx 5$). We note that this is a much faster convergence than the previous values of $\alpha$. 
+\subsection{$\alpha = 2.1$}
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/div.png}
+  \caption{Divergence of the system for $\alpha = 2.1$}
+  \label{fig:graph1}
+\end{figure}
+When the over-relaxation parameter is too large, \cite{theory} implies that the system will not reach the analytical solution, but instead will diverge with each iteration. As is clear from the second graph in Fig. 5, the behaviour of the system's divergence is oscillatory.
+\section{Conclusions}
+The \textit{Successive Over-Relaxation} (SOR) technique has been shown to be effective in solving Laplace's equation in two dimensions. Results suggest any choice of $\alpha \in [1,2)$ will give a solution, though the rate of convergence to that solution varies with $\alpha$. Further research could investigate rates of convergence against $\alpha$, and this could be compared with theoretical predictions. We see that, as predicted by theory, the iteration process produces an oscillatory divergent solution for $\alpha>2$. Indeed this is always the case when using SOR, and convergence is only reached when $\alpha \in (0,2)$.
+
+\begin{thebibliography}{9}
+
+\bibitem{complex}
+Graduate Course in Analytical Methods at UCL, Dr H. J. Winson.
+\texttt{http://www.ucl.ac.uk/~ucahhwi/LTCC/sectionF-complex.pdf}
+
+
+
+\bibitem{fluids} 
+Notes from a course in Calculus from Queen Mary, University of London.
+\texttt{http://qmplus.qmul.ac.uk/pluginfile.php/283383/mod\_{}resource/content/1/Chapter\%{}207\%{}20\-{}\%{}20Laplace\%{}2C\%{}202010.pdf}
+
+
+\bibitem{theory}
+Course on Numerical Methods, R.L. Burder \& J.D. Faires, Dublin City University.
+\texttt{https://www.math.ust.hk/\~{}mamu/courses/231/Slides/CH07\_{}4A.pdf}
+
+\bibitem{script}
+CO25 Lab Script, Physics Practical Course, University of Oxford.
+\texttt{http://www-teaching.physics.ox.ac.uk/}
+\end{thebibliography}
+\section{Appendix}
+\subsection{Code (MATLAB)}
+\begin{lstlisting}[style=matlab-editor]
+n = 7; %number of grid spacings
+a = 2.1; %over-relaxation parameter (alpha)
+psi=zeros(n,n); %initial 7x7 matrix of zeros, includes boundary conditions at x,y=0
+x= [0:1/(n-1):1];
+y = [0:1/(n-1):1];
+
+for i=2:n       %boundary conditions along y=1 and x=1
+    psi(1,i) = sin(x(i))*sinh(1);
+    psi(2:(n-1),n) = sin(1)*sinh(y((n-1):-1:2));
+end
+
+R=zeros(n); %initialize the value of the residual
+iter=1;     %initial iteration number
+iterMAX=30; %max iterations
+errorMAX=0.001; %condition for convergence
+sample1 = zeros(1,iterMAX); %initialise vectors for sample convergence
+sample2 = zeros(1,iterMAX);
+sample3 = zeros(1,iterMAX);
+%initialise vectors for sample convergence
+while iter<iterMAX %main calculation with strict condition for stopping (max no. of iterations)
+    for i=(n-1):-1:2 %sweeping right to left
+       for j=2:(n-1) %sweeping up
+                R(i,j) = psi(i,j+1) +psi(i,j-1) + psi(i+1,j) +psi(i-1,j)- 4*psi(i,j); %calculate residual
+                psi(i,j) = psi(i,j) +a*R(i,j)/4; %perform iteration
+       end
+        sample1(iter)=psi(5,5); %allocate sample values to see the convergence
+        sample2(iter)=psi(5,4);
+        sample3(iter)=psi(5,3);
+       
+    end
+    iter = iter+1; %update iteration number
+    if abs(max(max(R))) < errorMAX %test for convergence condition. If satisfied then proceed to plotting.
+        for i = 1:7 %aligns the matrix entries with their correct positions for the contour function (line 41)
+            A(i,:) = psi(8-i,:); 
+        end
+        for i=1:7 %produce analytic result
+            for j=1:7
+                Z(i,j)=sin(x(i))*sinh(y(j));
+            end
+        end
+        A=transpose(A); %make sure plots are in same orientation.
+        sample1 = sample1(1:iter-1) %crop sample vectors
+        sample2 = sample2(1:iter-1)
+        sample3 = sample3(1:iter-1)
+
+        [X,Y] = meshgrid(x,y); %plot both the computed and the analytic solutions if convergence occurs. 
+        %This happens if convergence condition satisfied, or max no. of steps reached
+        figure
+        subplot(1,2,1); contour(X,Y,A,60); xlabel('$x$','Interpreter','latex','fontsize',20);ylabel('$y$','Interpreter','latex','fontsize',20);title('\textbf Numerical Solution ($\alpha = 2.1$)','Interpreter','latex','fontsize',20);
+        subplot(1,2,2); plot(sample1) %plot samples to see convergence
+        hold on
+        plot(sample2)
+        hold on
+        plot(sample3)
+        title('\textbf Sample Values ($\alpha = 2.1$)','Interpreter','latex','fontsize',20)
+        xlabel('Iteration number ($m$)','Interpreter','latex','fontsize',20)
+        ylabel('$\psi^m$','Interpreter','latex','fontsize',20)
+        hold off
+        solution=A              %display the calculated solution 
+        analytic_solution=Z     %display the analytic solution
+        sprintf('Total number of iterations is %d', iter-1)%display the convergence iteration
+        
+        break %end iteration loop
+        
+    end
+    
+end
+\end{lstlisting}
+
+\end{document}

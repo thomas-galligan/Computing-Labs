@@ -1,0 +1,18 @@
+%%%Second attempt at 2D fourier transform
+%%Tom Galligan
+%University of Oxford
+%Trinity Term 2017
+
+N2 = 1024;
+[gx, gy] = meshgrid( gpuArray.colon( -1, 1/N2, (N2-1)/N2 ) );
+
+aperture       = ( abs(gx) < 4/N2 ) .* ( abs(gy) < 2/N2 );
+lightsource    = double( aperture );
+farfieldsignal = fft2( lightsource );
+
+
+farfieldintensity = real( farfieldsignal .* conj( farfieldsignal ) );
+
+imagesc( fftshift( farfieldintensity ) );
+axis( 'equal' ); axis( 'off' );
+title( 'Rectangular aperture far-field diffraction pattern' );

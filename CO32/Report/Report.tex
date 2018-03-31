@@ -1,0 +1,529 @@
+%Report for CO32 Computing Project: Fourier Optics
+%Thomas Galligan
+%Brasenose College
+%University of Oxford
+%Trinity Term 2017
+
+%%TO DO
+%Tidy up bibliography, sort out line indentations etc. Double check formulae.
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{amsmath,esint,commath,mathrsfs, graphicx,listings, matlab-prettifier}
+
+\setlength{\voffset}{-30mm}
+\setlength{\hoffset}{-10mm}
+\setlength{\oddsidemargin}{0mm}
+\setlength{\evensidemargin}{0mm}
+\DeclareMathOperator{\sinc}{sinc}
+\setlength{\marginparwidth}{0mm}
+\addtolength{\textwidth}{50mm}
+\addtolength{\textheight}{55mm}
+\usepackage{amsbsy}
+
+
+\begin{document}
+
+\begin{center}
+\Large{\textbf{CO32: Fourier Optics}}\\ 
+\vspace{1em}
+\large{T.P. Galligan}\\
+\large{Brasenose College}\\
+\large{Trinity Term 2017}
+\end{center}
+\section{Abstract}
+We present several applications of Fourier methods to optics, and utilise results from Fourier theory to simplify calculations. We also examine the two-dimensional theory of diffraction by simple extension of the 1D method. We verify the convolution in the simple case of a single finite-width slit. The Discrete Fourier Transform (DFT) is used in calculations, and its advantages and short-comings are discussed. 
+
+\section{Introduction}
+The theory of diffraction is of great importance in modern physics. Spectroscopic techniques, which rely on diffraction theory, are some of the most accurate experimental methods in physics, and have been used to determine quantities such as the Rydberg constant to 14 significant figures \cite{rydbergwiki}. In 1952, the structure of DNA was discovered by Franklin using X-ray crystallography, which again relies on an understanding of diffraction theory \cite{franklin}. It is clear that an understanding of diffraction theory is important, and developing computational methods to determine diffraction patterns is of vital importance to modern physics.\\
+The use of Fourier methods in wave optics is both powerful and widespread. Fourier techniques are particularly useful in solving diffraction problems that would otherwise require complex integration and excessive algebraic manipulation. The DFT is particularly suited to computational physics, and so we can write a program to determine the diffraction patterns for several simple geometries.
+
+\section{Theory}
+The theory of light \textit{in vacuo} can be determined from Maxwell's equations in free space \cite{hecht}
+
+\begin{align}
+\nabla \cdot{\textbf{E}} &= 0\\
+\nabla \cdot{\textbf{B}} &= 0\\
+\nabla \times \textbf{E} &= -\partial_t\textbf{B}\\
+\nabla \times \textbf{B} &= \mu_0 \varepsilon_0 \partial_t\textbf{E}
+\end{align}
+Taking the curl of Faraday's law, we using the results of the other equations, we find 
+\begin{equation}
+\nabla^2 \textbf{E} = \frac{1}{c^2} \partial_{tt}{\textbf{B}}
+\end{equation}
+Without specifying the precise spatial nature of the wave, we can write it as 
+\begin{equation}
+\tilde{\textbf{E}} = \tilde{\pmb{\mathscr{E}}}(\textbf{r})e^{-ikct}
+\end{equation}
+where $\tilde{\pmb{\mathscr{E}}}(\textbf{r})$ represents the complex, spatial part of the disturbance, and we use tildes to emphasise the complex nature of the quantities. Substituting this into the wave equation we obtain
+
+\begin{equation}
+\nabla^2 \tilde{\pmb{\mathscr{E}}} + k^2 \tilde{\pmb{\mathscr{E}}} = 0
+\end{equation}
+This is the Helmholtz equation, and is solved by the use of Green's Theorem; we simply quote the result here: \\
+The optical disturbance existing at a point P, expressed in terms of the optical disturbance, and its gradient evaluated on an arbitrary closed surface $\Sigma$, enclosing $P$, is
+\begin{equation} 
+|\tilde{\pmb{\mathscr{E}}_P}| \equiv \tilde{\mathscr{E}}_P = \frac{1}{4\pi} \bigg[\oiint_{\Sigma} \frac{e^{ikr}}{r}\nabla\tilde{\mathcal{E}} \cdot \dif \Sigma - \oiint_{\Sigma} \tilde{\mathcal{E}}\nabla\bigg(\frac{e^{ikr}}{r}\bigg)\cdot \dif \Sigma\bigg]
+\end{equation}
+This is the \textit{Kirchoff Integral Theorem}. For an unobstructed spherical wave originating at a point source $s$, the disturbance has the form
+\begin{equation} 
+\tilde{E}(\rho,t) = \frac{\mathcal{E}_0}{\rho} e^{i(k\rho - \omega t)}
+\end{equation}
+Where $r$ is the distance from P to the surface vector element $\dif \Sigma$, $\rho$ is the distance from the source to $\dif \Sigma$, and $\mathcal{E}_0$ is the electric field at the slit.\\
+\newline
+This gives
+\begin{equation}
+\tilde{\mathcal{E}}(\rho) = \frac{\mathcal{E}_0}{\rho}e^{ik\rho}
+\end{equation}
+Substituting this into Eq.(4), it becomes 
+\begin{equation}
+\tilde{\mathscr{E}}_P = \frac{1}{4\pi} \bigg[ \displaystyle\oiint_{\Sigma} \frac{e^{ikr}}{r}\frac{\partial}{\partial \rho}\bigg(\frac{\mathcal{E}_0}{\rho}e^{ik\rho}\bigg) \cos(\hat{n},\hat{\rho})\dif S - \displaystyle\oiint_{\Sigma} \frac{\mathcal{E}_0}{\rho}e^{ik\rho}\frac{\partial}{\partial r}\bigg(\frac{e^{ikr}}{r}\bigg) \cos(\hat{\mathbf{n}},\mathbf{\hat{\rho}})\dif S\bigg]
+\end{equation}
+where $\dif \Sigma = \hat{n} \dif S$, $\hat{n}$, $\hat{\rho}$, $\hat{r}$ are unit vectors. The derivatives under the integral signs are
+\begin{equation}
+\frac{\partial}{\partial r}\bigg(\frac{e^{ikr}}{r}\bigg) = e^{ikr} \bigg(\frac{ik}{r} - \frac{1}{r^2}\bigg)
+\end{equation}
+and similarly 
+\begin{equation}
+\frac{\partial}{\partial \rho}\bigg(\frac{e^{ikr}}{\rho}\bigg) = e^{ik\rho} \bigg(\frac{ik}{\rho} - \frac{1}{\rho^2}\bigg)
+\end{equation}
+We note that when $\rho >> \lambda$ and $r >> \lambda$ then the $1/\rho^2$ and $1/r^2$ terms can be neglected. This holds in the optical spectrum, but we should note that it is not applicable for low frequency regimes e.g. microwaves. Proceeding, we can write
+\begin{equation}
+\tilde{\mathscr{E}}_P = \frac{\mathcal{E}_0i}{\lambda} \displaystyle\oiint_{\Sigma} \frac{e^{ik(\rho+r)}}{\rho r} \bigg\{\frac{\cos(\hat{n},\hat{r})-\cos(\hat{n},\hat{\rho})}{2}\bigg\}\dif S
+\end{equation}
+and we define the \textit{obliquity factor} 
+\begin{equation}
+\eta = \frac{\cos(\hat{n},\hat{r})-\cos(\hat{n},\hat{\rho})}{2}
+\end{equation}
+from which we arrive at 
+\begin{equation}
+\boxed{\tilde{\mathscr{E}}_P = -\frac{\mathcal{E}_0i}{\lambda} \displaystyle\oiint_{\Sigma} \eta \frac{e^{ik(\rho+r)}}{\rho r} \dif S}
+\end{equation}
+This is the \textit{\textbf{Fresnel-Kirchoff diffraction formula}}\cite{hecht}. We then simplify as follows:
+\begin{itemize}
+\item Let $\eta \rightarrow 1$ by assuming the wavefront is parallel to the slit.
+\item Restrict to one dimension (for now): $\dif S \rightarrow \dif x$
+\item Ignore the $\frac{1}{\rho r}$ by considering only a small range of $r$ and $\rho$.
+\item Write $e^{ik(\rho +r)} = e^{ikr'}e^{ikx}\sin\theta$
+\item Absorb $e^{ikr'}$ into the constant of proportionality
+\end{itemize}
+The electric field as a function of angle $\theta$ is then:
+\begin{equation}
+\tilde{\mathscr{E}}(\beta) \propto \int_{-\infty} ^{\infty} \mathcal{E}(x) e^{i\beta x} \dif x
+\end{equation}
+Where $\beta = k\sin\theta$.
+This is the \textit{Fourier Transform}~(FT) of the source's electric field $\mathcal{E}(x)$. Therefore, we can find the diffraction pattern as a function of $\beta$ simply by taking the FT of the source function. This is what we will do for the remainder of this report. 
+As a simple example, consider a slit of width d with uniform intensity $u$ across the slit. Then the diffraction pattern's electric field is given by
+\begin{equation*}
+\begin{split}
+\mathcal{U}(\beta) & = \int_{-\infty}^{\infty} ue^{i\beta dx} \dif x\\
+& = \int_{-\frac{d}{2}}^{\frac{d}{2}} ue^{i\beta dx} \dif x \\
+& = \frac{1}{i\beta d}(e^{i\beta d/2}-e^{-i\beta d/2})\\
+& = \frac{2}{\beta d} \sin\bigg(\frac{\beta d}{2}\bigg)\\
+& = \sinc\bigg(\frac{\beta d}{2}\bigg) \\
+\end{split}
+\end{equation*}
+\section{Methods}
+As in \cite{script}, we approximate the FT by a \textit{Discrete Fourier Transform}(DFT). This allows for simple computation. A function was created in MATLAB to take a vector as an input and to return the DFT of that vector. See Appendix 1 for details. 
+\section{Results}
+\subsection{Problem A}
+We use the DFT function (Appendix 1) to compute the DFT of several slits:
+\subsubsection{Slit of width 10 centred on origin}
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/graph1.png}
+  \caption{Results from a slit of width 10 at the centre}
+  \label{fig:graph1}
+\end{figure}
+\noindent Here we plot the modulus squared of the diffraction pattern as a function of $\beta = kd\sin\theta$, where $d$ is the width of the slit, as well as the real part as a function of $\beta$. 
+\pagebreak
+\subsubsection{Slit of width 10 centred at -10}
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/graph2.png}
+  \caption{Results from a displaced slit of width 10}
+  \label{fig:graph2}
+\end{figure}
+Since $\beta$ is only a function of the angle from the normal to the slit, the diffraction pattern is identical. However, we note that the real part is different to that in \S5.1.1, as the real part of the electric field at the screen is altered by the change in the position of the slit, but it does not encode the entire diffraction pattern, since we need to account for the imaginary part to properly describe the electromagnetic waves' nature.
+\subsubsection{Slit of width 20 centred on origin}
+\begin{figure}[h]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/graph3.png}
+  \caption{Results from a slit of width 20 at the centre}
+  \label{fig:graph1}
+\end{figure}
+We can see that as the width of the slit has increased, the diffraction pattern's peak has narrowed, as predicted by diffraction theory. The peak is also greater, as there is twice as much electric field passing through, leading to an intensity four times bigger.
+\subsubsection{Slit of width 20 centred on origin of one-quarter intensity}
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/graph4.png}
+  \caption{Results from a slit of width 20 at the centre, at one-quarter intensity}
+  \label{fig:graph1}
+\end{figure}
+Here the source electric field was halved to 0.5, meaning that the overall intensity is reduced by a factor of 4, as seen in the graph above. Since the geometry of the slit is the same, we find that the geometry of the diffraction pattern is similarly unchanged.
+\pagebreak
+\subsection{Convolution}
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/graph5.png}
+  \caption{Verification of the Convolution theorem}
+  \label{fig:graph1}
+\end{figure}
+In this section, we verify the result of the convolution theorem, which is stated in the script\cite{script}. We can see that the modulus of the DFT of the convolution is the same as the modulus DFT squared of the slit, however their real parts are not equal, though hold a similar structure. 
+\pagebreak
+\subsection{Two-Dimensional Optics}
+\subsubsection{Cross-Shaped Slit}
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/graph6.png}
+  \caption{Results from a cross shaped slit}
+  \label{fig:graph1}
+\end{figure}
+Performing a DFT in two dimensions (see Appendix 2), we find that the diffraction pattern generated by a cross of uniform intensity is broadly similar to what we would expect given the configuration.
+\subsubsection{Two square slits}
+\noindent Forming two square slits leads to an anisotropy in the diffraction pattern, with peaks perpendicular to the line joining the slits.
+\begin{figure}[h!]
+  \includegraphics[width=\linewidth]{/Users/Tom/Desktop/graph7.png}
+  \caption{Results from two slits}
+  \label{fig:graph1}
+\end{figure}
+\section{Conclusions}
+The Discrete Fourier Transform is a powerful computational tool for investigating the diffraction effects created by different sources. We have demonstrated its use in both one- and two-dimensional space, and with a variety of geometries. We note, however, that the two-dimensional DFT has a considerable computing time, not least due to the four nested for-loops in its code. Refinement of Fourier Transform algorithms is of major importance, and has led to the developments of the \textit{Fast} Fourier Transform (FFT). The FFT is a very powerful computational tool, however its precise workings are beyond the scope of this paper. For simple systems, however, the DFT developed here is more than sufficient.
+\pagebreak
+\begin{thebibliography}{9}
+\bibitem{rydbergwiki}
+National Institute of Standards and Technology (NIST)
+\texttt{http://physics.nist.gov/cgi-bin/cuu/Value?ryd}
+\bibitem{franklin} 
+DNA Learning Centre webpage on Franklin.
+\texttt{https://www.dnalc.org/view/15014-Franklin-s-X-ray-diffraction-explanation-of-X-ray-pattern-.html}
+\bibitem{hecht}
+\textit{Optics}, E. Hecht. ISBN 9780321188786 
+\bibitem{ewart}
+Optics Lecture Notes, P Ewart. University of Oxford.
+\bibitem{script}
+CO32 Lab Script, Physics Practical Course, University of Oxford.
+\texttt{http://www-teaching.physics.ox.ac.uk/}
+\end{thebibliography}
+
+\section{Appendix}
+\subsection{DFT Function}
+\begin{lstlisting}[style=matlab-editor]
+function [ X ] = DFT( x )
+%takes an input array x and outputs the DFT if the array, given by X.
+%Tom Galligan
+M=length(x); %M is equal to the dimensionality of x (no. of elements)
+for k=-M/2:(M/2)-1 %relabel the elements of x so that the middle is at 0
+    X(k+(M/2)+1)=0; %Preallocate vector
+    for n=0:M-1
+        X(k+(M/2)+1)=X(k+(M/2)+1)+x(n+1).*exp(-1i.*2.*pi.*(n-1).*(k-1)./M); %perform DFT, using complex notation for simplicity.
+    end
+end
+
+end
+\subsection{1D Diffraction Patterns}
+\subsubsection{Central slit of width 10}
+N=input('Enter N: '); %ask for value of N
+A = zeros(1,2*N); %construct array of width 2N
+A(N-4:N+5)=1; %construct slit at centre of array of width 10
+
+
+dft = DFT(A); %perform the Discrete Fourier Transform of A
+
+mod = abs(dft); %find the modulus of the DFT (complex modulus of each component)
+re = real(dft); %find the real part of the DFT
+
+
+
+%plot the graphs
+t = [-249:250]; %define an 'x' axis
+figure
+subplot(1,2,1) %plots both graphs in one figure
+plot(t,mod.^2) %pllot mod^2 of the DFT
+title('Modulus squared of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20) %title
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20) %label axes
+ylabel('Modulus-squared of the DFT', 'Interpreter','latex', 'fontsize',20)
+subplot(1,2,2)
+plot(t,re) %plot real part of DFT
+title('Real part of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20) %title
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20) %label axes
+ylabel('Real part of the DFT', 'Interpreter','latex', 'fontsize',20)
+\end{lstlisting}
+\subsubsection{Slit at -10 of width 10}
+\begin{lstlisting}[style=matlab-editor]
+N=input('Enter N: '); %enter value of N
+A = zeros(1,2*N); %construct array
+A(N-14:N-5)=1; %construct slit centred at -10 of width 10 
+
+
+dft = DFT(A); %perform the Discrete Fourier Transform of A
+
+mod = abs(dft); %find the modulus of the DFT (complex modulus of each component)
+re = real(dft); %find the real part of the DFT
+
+%plot the graphs
+t = [-249:250]; %define an 'x' axis
+figure
+subplot(1,2,1)
+plot(t,mod.^2)
+title('Modulus squared of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Modulus-squared of the DFT', 'Interpreter','latex', 'fontsize',20)
+subplot(1,2,2)
+plot(t,re)
+title('Real part of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Real part of the DFT', 'Interpreter','latex', 'fontsize',20)
+\end{lstlisting}
+\subsubsection{Slit at origin of width 20}
+\begin{lstlisting}[style=matlab-editor]
+N=250;
+A = zeros(1,2*N); %construct array
+A(N-9:N+10)=1; %construct slit at centre of array of width 20
+
+
+
+dft = DFT(A); %perform the Discrete Fourier Transform of A
+
+mod = abs(dft); %find the modulus of the DFT (complex modulus of each component)
+re = real(dft); %find the real part of the DFT 
+
+
+figure
+subplot(1,2,1)
+plot(t,mod.^2)
+title('Modulus squared of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Modulus-squared of the DFT', 'Interpreter','latex', 'fontsize',20)
+subplot(1,2,2)
+plot(t,re)
+title('Real part of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Real part of the DFT', 'Interpreter','latex', 'fontsize',20)
+\end{lstlisting}
+\subsubsection{Slit of width 20 with half 'height'}
+\begin{lstlisting}[style=matlab-editor]
+N=250;
+A = zeros(1,2*N); %construct array
+A(N-9:N+10)=1; %construct slit at centre of array of width 20
+
+
+
+dft = DFT(A); %perform the Discrete Fourier Transform of A
+
+mod = abs(dft); %find the modulus of the DFT (complex modulus of each component)
+re = real(dft); %find the real part of the DFT 
+
+
+figure
+subplot(1,2,1)
+plot(t,mod.^2)
+title('Modulus squared of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Modulus-squared of the DFT', 'Interpreter','latex', 'fontsize',20)
+subplot(1,2,2)
+plot(t,re)
+title('Real part of the Discrete Fourier Transform','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Real part of the DFT', 'Interpreter','latex', 'fontsize',20)
+\end{lstlisting}
+\subsection{Convolution}
+\begin{lstlisting}[style=matlab-editor]
+N = input('Enter N: ');
+A = zeros(1,2*N); %preallocate vectors as usual
+A(N-9:N+10) = 1; %form the slit 
+
+%convolution algorithm (general)
+h = A; %here we define the second function to be equal to the first (as we are convolving the slit with itself)
+m = length(A); %set m to the length of A
+n = length(h); %and again for n and h
+X = [A,zeros(1,n)]; %Prepare vectors (convolution increases their dimensionality)
+H = [h,zeros(1,m)];
+for i = 1:n+m %n+m elements in convolution vector
+    Y(i) = 0; %preallocate output vector's elements
+    for j=1:m
+        if(i-j+1>0) %only convolve the overlap region to save computing time
+            Y(i) = Y(i)+X(j)*H(i-j+1); %perform the discrete convolution
+        else
+        end
+    end
+end
+
+%Y = conv(x,x); %%this was used to check that the convolution algorithm
+%works (it does)
+Y = Y(N:3*N-1);%take only the middle section (convolution doubles the number of elements in the vector)
+plot(Y)
+ylabel('$I(\beta)$', 'Interpreter','latex','fontsize',20);
+xlabel('$x$', 'Interpreter','latex','fontsize',20);
+title('Convolution of a slit with itself', 'Interpreter','latex','fontsize',20);
+
+
+
+dftconv = DFT(Y); %take only the middle section (convolution doubles the number of elements in the vector)
+modconv = abs(dftconv);
+reconv = real(dftconv);
+
+
+
+dftslitsq = DFT(A).^2;
+modslitsq = abs(dftslitsq);
+reslitsq = real(dftslitsq);
+
+%plot the graphs
+t = -N:N-1; %define an x axis
+figure
+subplot(2,2,1)
+plot(t,modconv) %%take only the middle section (convolution doubles the number of elements in the vector)
+title('Modulus of the DFT of the convolution', 'Interpreter','latex','fontsize',20);
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Modulus of the convolution', 'Interpreter','latex', 'fontsize',20)
+
+subplot(2,2,2)
+plot(t,reconv) %%%%take only the middle section (convolution doubles the number of elements in the vector)
+title('Real part of the DFT of the convolution', 'Interpreter','latex','fontsize',20);
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Real part of the convolution', 'Interpreter','latex', 'fontsize',20)
+
+subplot(2,2,3)
+plot(t,modslitsq)
+title('Modulus of the DFT squared of the slit', 'Interpreter','latex','fontsize',20);
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Modulus of DFT(slit)$^2$', 'Interpreter','latex', 'fontsize',20)
+
+subplot(2,2,4)
+plot(t,reslitsq)
+title('Real part of the DFT squared of the slit', 'Interpreter','latex','fontsize',20);
+xlabel('$\beta$', 'Interpreter','latex', 'fontsize',20)
+ylabel('Real part of the DFT(slit)$^2$', 'Interpreter','latex', 'fontsize',20)
+\end{lstlisting}
+\subsection{Two-Dimensional Optics}
+\subsubsection{Cross-Shaped Slit}
+\begin{lstlisting}[style=matlab-editor]
+N = input('Enter N: ');
+A = zeros(N,N); %construct array
+A(N/2,N/2)=1; %Form source
+A(N/2,N/2+1)=1;
+A(N/2,N/2-1)=1;
+A(N/2-1,N/2)=1;
+A(N/2+1,N/2)=1;
+
+re =zeros(N,N);
+mod = zeros(N,N);
+
+
+
+F = zeros(N,N);
+
+          
+syms x
+syms y
+mod = zeros(N,N);
+re = zeros(N,N);
+Y = zeros(1,2*N);
+X = zeros(1,2*N);
+
+%%Perform the fourier transform
+for u=1:2*N %same approach as the 1D case, just nesting the for loops.
+    for v=1:2*N
+        for x = 1:N
+                for y = 1:N
+                    Y(y) =  A(x,y)*exp((-pi/N)*1i*((x-N/2)*u+(y-N/2)*v));
+                end
+         X(x) = sum(Y);
+        end
+        F(u,v) = sum(X);
+        mod(u,v) = abs(F(u,v));
+       re(u,v) = real(F(u,v));
+    end
+    
+end
+
+%plot result
+figure
+subplot(1,3,2)
+surf(fftshift(mod).^2)
+title('Modulus squared of the DFT','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$','Interpreter','latex', 'fontsize',20)
+ylabel('$\gamma$','Interpreter','latex', 'fontsize',20)
+zlabel('Modulus Squared of DFT','Interpreter','latex', 'fontsize',20)
+
+subplot(1,3,3)
+surf(fftshift(re))
+title('Real part of DFT','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$','Interpreter','latex', 'fontsize',20)
+ylabel('$\gamma$','Interpreter','latex', 'fontsize',20)
+zlabel('Real Part of DFT','Interpreter','latex', 'fontsize',20)
+
+subplot(1,3,1)
+surf(A)
+title('Slit','Interpreter','latex', 'fontsize',20)
+xlabel('$x$','Interpreter','latex', 'fontsize',20)
+ylabel('$y$','Interpreter','latex', 'fontsize',20)
+\end{lstlisting}
+\subsubsection{Two Square Slits}
+\begin{lstlisting}[style=matlab-editor]
+N = input('Enter N: ');
+A = zeros(N,N); %construct array
+A(N/2,N/2)=1; %Form first source
+A(N/2,N/2+1)=1;
+A(N/2+1,N/2)=1;
+A(N/2+1,N/2+1)=1;
+
+A(N/2+4,N/2+4)=1; %Form 2nd source
+A(N/2+4,N/2+5)=1;
+A(N/2+5,N/2+4)=1;
+A(N/2+5,N/2+5)=1;
+
+
+re=zeros(N,N);
+mod = zeros(N,N);
+
+Y = fft2(A);
+mod = abs(Y);
+re = real(Y);
+
+
+
+F = zeros(N,N);
+            
+syms x
+syms y
+mod = zeros(N,N);
+re = zeros(N,N);
+Y = zeros(1,2*N);
+X = zeros(1,2*N);
+
+%%Perform the fourier transform
+for u=1:2*N
+    for v=1:2*N
+        for x = 1:N
+                for y = 1:N
+                    Y(y) =  A(x,y)*exp((-pi/N)*1i*((x-N/2)*u+(y-N/2)*v));
+                end
+         X(x) = sum(Y);
+        end
+        F(u,v) = sum(X);
+        mod(u,v) = abs(F(u,v));
+       re(u,v) = real(F(u,v));
+    end
+    
+end
+
+%plot result
+figure
+subplot(1,3,2)
+surf(fftshift(mod).^2)
+title('Modulus squared of the DFT','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$','Interpreter','latex', 'fontsize',20)
+ylabel('$\gamma$','Interpreter','latex', 'fontsize',20)
+zlabel('Modulus Squared of DFT','Interpreter','latex', 'fontsize',20)
+
+subplot(1,3,3)
+surf(fftshift(re))
+title('Real part of DFT','Interpreter','latex', 'fontsize',20)
+xlabel('$\beta$','Interpreter','latex', 'fontsize',20)
+ylabel('$\gamma$','Interpreter','latex', 'fontsize',20)
+zlabel('Real Part of DFT','Interpreter','latex', 'fontsize',20)
+
+
+subplot(1,3,1)
+surf(A)
+title('Slit','Interpreter','latex', 'fontsize',20)
+xlabel('$x$','Interpreter','latex', 'fontsize',20)
+ylabel('$y$','Interpreter','latex', 'fontsize',20)
+\end{lstlisting}
+
+\end{document}

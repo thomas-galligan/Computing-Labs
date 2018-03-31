@@ -1,0 +1,26 @@
+%Determining the structure of white dwarf stars by numerically solving
+%hydrostatic equilibrium equations, using the model of a relativistic
+%free electron Fermi gas.
+%Tom Galligan
+%MT16
+%University of Oxford
+
+h=6.63e-34; %enter planck constant
+m_e = 9.11e-31; %enter rest mass of electron
+m_p = 6.27e-27;%enter rest mass of proton
+c=2.9979e8;
+m_S = 1.988e30;
+G = 6.67e-11; %enter Universal Gravitational Constant
+dr = input('Enter dr: '); %ask user to input a value for dr
+rho_c = 10^5.9; %enter start centre mass (*10^-0.1 for coding purposes - keeps the 'for' loop simple)
+ %enter the starting mass using rhoc
+r=dr; %initial value of radius is dr
+K_F = (3*0.5)/(8*pi*m_p))
+
+for i=1:81 
+    rho_c = (10^0.1)*rho_c;
+    rho_0 = rho_c;
+    m_0 = ((4/3)*pi*(dr)^3)*rho_0;
+    x_0 = [rho_0, m_0];
+    r=dr;
+    
